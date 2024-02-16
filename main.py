@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, File, UploadFile, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel, AnyUrl
-from fpdf import FPDF
+# from fpdf2 import FPDF
 from typing import Any
 from utils import CoverLetterGenerator
 # import pdfplumber
@@ -60,6 +60,10 @@ async def return_document_locations(docs: RequiredDocs):
 #     return {"filename": file.filename,
 #             "content": contents}
 
+@app.get("/")
+async def redirect_root_to_docs():
+    return RedirectResponse("/docs")
+
 @app.post("/uploadfile/")
 async def create_upload_file(file: UploadFile):
     return {"filename": file.filename,
@@ -71,19 +75,19 @@ async def get_create_upload_file(file: UploadFile):
     headers = {'Content-Disposition': 'inline; filename="out.pdf"'}
     return Response(contents, headers=headers, media_type="application/pdf")
 
-def create_PDF(text):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font('helvetica', 'B', 16)
-    pdf.cell(10, 30, text)
-    return pdf.output()
+# def create_PDF(text):
+#     pdf = FPDF()
+#     pdf.add_page()
+#     pdf.set_font('helvetica', 'B', 16)
+#     pdf.cell(10, 30, text)
+#     return pdf.output()
 
     
-@app.get('/')
-def get_pdf():
-    out = create_PDF('Hello World!')
-    headers = {'Content-Disposition': 'inline; filename="out.pdf"'}
-    return Response(bytes(out, encoding="latin-1"), headers=headers, media_type='application/pdf')
+# @app.get('/')
+# def get_pdf():
+#     out = create_PDF('Hello World!')
+#     headers = {'Content-Disposition': 'inline; filename="out.pdf"'}
+#     return Response(bytes(out, encoding="latin-1"), headers=headers, media_type='application/pdf')
 
 # The following code is based on this stackoverflow link "https://stackoverflow.com/questions/76195784/how-to-generate-and-return-a-pdf-file-from-in-memory-buffer-using-fastapi"
 # def create_pdf()
