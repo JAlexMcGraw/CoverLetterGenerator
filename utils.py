@@ -1,11 +1,11 @@
 import openai
-from dotenv import load_dotenv
 # import pdfplumber
 from pydantic import BaseModel
 import re
+# from dotenv import load_dotenv
 
+# load_dotenv()
 
-load_dotenv()
 
 from typing import ClassVar, Optional
 
@@ -29,7 +29,7 @@ def generate_description(input):
 
 class CoverLetterGenerator(BaseModel):
 
-    resume_path: str
+    resume: str
     job_posting_url:str
     default_sys_prompt: ClassVar[str]="""You are a job application assistant. You are to write a cover letter by using the supplied resume, which will come after 'RESUME:', and using the supplied job posting, which
             will come after 'JOB POSTING:'. The resume will be split into different sections in a list, with order of importance descending; the most important section will come first, and least important section coming last.
@@ -46,15 +46,8 @@ class CoverLetterGenerator(BaseModel):
     # default_user_prompt: ClassVar[str]=f"RESUME: {split_resume_no_header}\n-----\nJOB POSTING: {job_doc}"
     default_user_prompt: str = ""
 
-    # def __init__(self, resume_path: str, job_posting_url: str, default_sys_prompt: Optional[str]=None, default_user_prompt: Optional[str]=None):
-    #     super().__init__()
-    #     self.resume_path=resume_path
-    #     self.job_posting_url=job_posting_url
-    #     self.default_sys_prompt=default_sys_prompt or self.default_sys_prompt
-    #     self.default_user_prompt=default_user_prompt or self.default_user_prompt
-
-    def __init__(self, resume_path: str, job_posting_url: str):
-        super().__init__(resume_path=resume_path, job_posting_url=job_posting_url)
+    def __init__(self, resume: str, job_posting_url: str):
+        super().__init__(resume=resume, job_posting_url=job_posting_url)
         self.set_default_user_prompt()
 
     def set_default_user_prompt(self):
@@ -63,32 +56,32 @@ class CoverLetterGenerator(BaseModel):
         self.default_user_prompt = f"RESUME: {split_resume_no_header}\n-----\nJOB POSTING: {job_doc}"
 
     
-    def _read_resume(self) -> str:
-        import pdfplumber 
+    # def _read_resume(self) -> str:
+    #     import pdfplumber 
 
-        read_in_resume = pdfplumber.open(self.resume_path)
-        pages = read_in_resume.pages[0]
-        resume = pages.extract_text()
+    #     read_in_resume = pdfplumber.open(self.resume_path)
+    #     pages = read_in_resume.pages[0]
+    #     resume = pages.extract_text()
 
-        return resume
+    #     return resume
     
     def _split_resume_into_list(self) -> list:
 
-        resume = self._read_resume()
+        # resume = self._read_resume()
         # Define a regular expression pattern to match all upper case words
         header_pattern = re.compile(r'\n\b[A-Z]+\b')
 
         # Find all matches of the pattern in the input string
-        header_matches = header_pattern.finditer(resume)
+        header_matches = header_pattern.finditer(self.resume)
 
         # Extract the indices of the matches
         header_indices = [match.start() for match in header_matches]
 
         # Add the start and end indices of the string to mark the boundaries
-        header_indices = [-1] + header_indices + [len(resume)]
+        header_indices = [-1] + header_indices + [len(self.resume)]
 
         # Split the string based on the identified header indices
-        result_parts = [resume[header_indices[i] + 1:header_indices[i + 1]].strip() for i in range(len(header_indices) - 1)]
+        result_parts = [self.resume[header_indices[i] + 1:header_indices[i + 1]].strip() for i in range(len(header_indices) - 1)]
 
         return result_parts[1:]
     
