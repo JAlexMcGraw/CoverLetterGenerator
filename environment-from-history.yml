@@ -1,0 +1,28 @@
+name: cover-letter-generator
+channels:
+  - microsoft
+  - conda-forge
+  - defaults
+dependencies:
+  - ipykernel
+  - langchain
+  - beautifulsoup4
+  - openai
+  - pydantic
+  - python-docx
+  - python-dotenv
+  - pdfplumber
+  - selenium
+  - libmagic
+  - python=3.11
+  - llama-index
+  - nltk
+  - conda-forge::fpdf
+  - fpdf2
+  - fastapi
+  - python-multipart
+  - uvicorn
+  - pypdf2
+  - langchain-community
+  - aiofiles
+prefix: /Users/alexmcgraw/miniconda3/envs/cover-letter-generator

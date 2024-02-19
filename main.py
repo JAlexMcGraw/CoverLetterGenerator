@@ -1,5 +1,5 @@
-from fastapi import FastAPI, File, UploadFile, Response, Form
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, File, UploadFile, Response, Form, HTTPException
+from fastapi.responses import RedirectResponse, PlainTextResponse, FileResponse
 from pydantic import BaseModel, AnyUrl, HttpUrl
 import requests
 from io import BytesIO
@@ -7,6 +7,7 @@ from typing import Annotated
 from utils import CoverLetterGenerator
 import PyPDF2   
 import os
+from docx import Document
 
 
 app = FastAPI()
@@ -63,15 +64,32 @@ async def process_pdf(pdf_source, is_local_file=False):
     return {"status": "Processing completed",
             "text": text}
 
-@app.post("/generate_cover_letter/")
-async def cover_letter_generate(openai_api_key: Annotated[str, Form()], job_post_url: AnyUrl, resume: UploadFile = File(...)):
+async def process_txt_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    return PlainTextResponse(contents.decode('utf-8'))
 
-    os.environ['OPENAI_API_KEY'] = openai_api_key
+@app.post("/generate_cover_letter/")
+async def cover_letter_generate(job_post_url: AnyUrl, resume: UploadFile = File(...), key_file: UploadFile = File(None), openai_api_key: Annotated[str, Form()] | None = None):
+
+    if key_file is not None:
+        plain_text_response = await process_txt_file(key_file)
+        key = plain_text_response.body.decode('utf-8')
+        os.environ['OPENAI_API_KEY'] = key
+        openai_api_key = None
+    elif openai_api_key is not None:
+        os.environ['OPENAI_API_KEY'] = openai_api_key
+    elif openai_api_key is None:
+        raise HTTPException(status_code=400, detail="Argument 'openai_api_key' is required when argument 'key_file' is None")
+    
     resume = await process_pdf(resume.filename, is_local_file=True)
 
     cl = CoverLetterGenerator(resume=resume['text'],
                               job_posting_url=job_post_url.unicode_string())
     
-    cover_letter = cl.generate_cover_letter()
+    cover_letter_str = cl.generate_cover_letter()
 
-    return cover_letter
+    doc = Document()
+    doc.add_paragraph(cover_letter_str)
+    doc.save('cover-letter.docx')
+
+    return FileResponse(path='cover-letter.docx', media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document', filename='cover-letter.docx')

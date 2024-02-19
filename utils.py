@@ -2,6 +2,7 @@ import openai
 # import pdfplumber
 from pydantic import BaseModel
 import re
+from docx import Document
 # from dotenv import load_dotenv
 
 # load_dotenv()
@@ -86,7 +87,7 @@ class CoverLetterGenerator(BaseModel):
         return result_parts[1:]
     
     def _load_job_listing_html(self) -> str:
-        from langchain.document_loaders import SeleniumURLLoader
+        from langchain_community.document_loaders import SeleniumURLLoader
 
         web_doc = SeleniumURLLoader([self.job_posting_url]).load()
 
@@ -127,3 +128,4 @@ class CoverLetterGenerator(BaseModel):
         )
 
         return response.choices[0].message.content
+
